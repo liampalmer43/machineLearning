@@ -16,13 +16,13 @@ for i = 1:10
 end
 
 % Calculate accuracy for k = 1:30.
-for k = 1:1
+for k = 1:30
   x(k) = k;
   y(k) = crossValidation(D, L, k);
-  display(k);
-  display(y(k));
 end
 
+display(x);
+display(y);
 % Plot results.
 figure(1);
 plot(x, y, 'b');
@@ -47,7 +47,7 @@ function avgAccuracy = crossValidation(D, L, k)
     testData = D{i};
     testLabels = L{i};
     acc = applyKNN(data, labels, testData, testLabels, k);
-    result = result + acc;;
+    result = result + acc;
   end
   avgAccuracy = result / 10;
 
@@ -72,7 +72,7 @@ function accuracy = applyKNN(data, labels, testData, testLabels, k)
   for i = 1:testCount
     % For each training:
     for j = 1:dataCount
-      e(j) = norm(data(j)-testData(i));
+      e(j) = norm(data(j,:)-testData(i,:));
     end
     [S,I] = sort(e);
 
@@ -97,6 +97,7 @@ function accuracy = applyKNN(data, labels, testData, testLabels, k)
     actualValue = testLabels(i, 1);
     assert(actualValue == 5 || actualValue == 6);
 
+    % Update correct counts.
     if value == actualValue
       correct = correct + 1;
     else
