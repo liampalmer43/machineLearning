@@ -18,10 +18,11 @@ end
 % Calculate Euclidean loss for l = 0,0.1,0.2, ... ,3.9,4.0
 l = 0;
 index = 1;
-while l <= 4
-  display(strcat('lambda', num2str(l)));
+while l <= 4.01
   x(index) = l;
   y(index) = crossValidation(D, L, l);
+  display(strcat('lambda', num2str(l,'%.8f')));
+  display(strcat('avgLoss', num2str(y(index),'%.8f')));
   l = l + 0.1;
   index = index + 1;
 end
