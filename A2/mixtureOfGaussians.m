@@ -33,7 +33,12 @@ display(strcat('Pi1 = ', num2str(pi5)));
 display(strcat('Pi2 = ', num2str(pi6)));
 display(u5);
 display(u6);
-display(SIG);
+[d1, d2] = size(SIG);
+assert(d1 == d2);
+for i = 1:d1
+  diag(i) = SIG(i,i);
+end
+display(diag);
 
 % Returns the accuracy of 10-fold cross validation using Mixture of Gaussians.
 function avgAccuracy = crossValidation(D, L)
