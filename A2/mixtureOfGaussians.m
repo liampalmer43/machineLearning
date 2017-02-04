@@ -1,4 +1,4 @@
-function [] = knn()
+function [] = mixtureOfGaussians()
 
 % 10 Data Blocks
 D = cell(10, 1);
@@ -18,6 +18,17 @@ end
 % Calculate average accuracy.
 result = crossValidation(D, L);
 display(result);
+
+% Train on whole data set, show w and w0.
+data = [];
+labels = [];
+for i = 1:10
+  data = [data; D{i}];
+  labels = [labels; L{i}];
+end
+[w, w0] = getParameters(data, labels);
+display(w0);
+display(w);
 
 % Returns the accuracy of 10-fold cross validation using Mixture of Gaussians.
 function avgAccuracy = crossValidation(D, L)
@@ -45,74 +56,96 @@ function avgAccuracy = crossValidation(D, L)
 function accuracy = applyMOG(data, labels, testData, testLabels)
   [m,n] = size(data);
   [p,q] = size(labels);
+  assert(m == 999);
+  assert(p == 999);
+  assert(n == 64);
+  assert(q == 1);
+  dataCount = m;
   [a,b] = size(testData);
   [c,d] = size(testLabels);
-  assert(m == p && m == 999);
   assert(a == c && a == 111);
-  assert(n == b && n == 64);
-  assert(q == d && q == 1);
+  assert(b == 64);
+  assert(d == 1);
   testCount = a;
-  dataCount = m;
+ 
+  [w, w0] = getParameters(data, labels);
+  [d1, d2] = size(w);
+  assert(d1 == 1 && d2 == 64);
+ 
   correct = 0;
   incorrect = 0;
-
-  % Maximum likelihood parameter estimation.
-  total = 0;
-  total5 = 0;
-  total6 = 0;
-  total5Data = zeros(1, n);
-  total6Data = zeros(1, n);
-  % For each training:
-  for i = 1:dataCount
-    label = labels(i, 1);
-    assert(label == 5 || label == 6);
-    if label == 5
-      total5 = total5 + 1;
-      total5Data = total5Data + data(i,:);
-    else
-      total6 = total6 + 1;
-      total6Data = total6Data + data(i,:);
-    end
-    total = total + 1;
-  end
-  avg5 = total5Data / total5;
-  avg6 = total6Data / total6;
-  prob5 = total5 / total;
-  prob6 = total6 / total;
-  assert(abs(prob5+prob6-1) < 0.000001);
-  
-  sum5 = 0;
-  sum6 = 0;
-  for i = 1:dataCount
-    label = labels(i, 1);
-    assert(label == 5 || label == 6);
-    if label == 5
-      sum5 = sum5 + (data(i,:)*transpose(data(i,:)));
-    else
-      sum6 = sum6 + (data(i,:)*transpose(data(i,:)));
-    end
-  end
-  variance = (sum5 + sum6) / total;
-
-  % Estimation parameters.
-  w = (avg5 - avg6) / variance;
-  [d1,d2] = size(w);
-  assert(d1 == 1 && d2 == n);
-  w0 = -0.5*avg5*transpose(avg5)/variance + 0.5*avg6*transpose(avg6)/variance + log(prob5/prob6);
-
   % For each test:
   for i = 1:testCount
-    chance5 = sig(w*transpose(testData(i,:)) + w0);
-    if chance5 >= 0.5 && testLabels(i, 1) == 5
+    [d1, d2] = size(testData(i,:));
+    assert(d1 == 1 && d2 == 64);
+    prob5 = sig(w*transpose(testData(i,:)) + w0);
+    assert(prob5 >= 0 && prob5 <= 1);
+    label = testLabels(i, 1);
+    assert(label == 5 || label == 6);
+
+    if prob5 >= 0.5 && label == 5
       correct = correct + 1;
-    elseif chance5 < 0.5 && testLabels(i, 1) == 6
+    elseif prob5 < 0.5 && label == 6
       correct = correct + 1;
     else
       incorrect = incorrect + 1;
     end
   end
+  assert(correct + incorrect == testCount);
 
   accuracy = correct / (correct + incorrect);
+
+function [w, w0] = getParameters(data, labels)
+  [m,n] = size(data);
+  dataCount = m;
+
+  % Maximum likelihood parameter estimation.
+  N = 0;
+  N5 = 0;
+  N6 = 0;
+  u5 = zeros(1, n);
+  u6 = zeros(1, n);
+  % For each training:
+  for i = 1:dataCount
+    [d1, d2] = size(data(i,:));
+    assert(d1 == 1 && d2 == n);
+    label = labels(i, 1);
+    assert(label == 5 || label == 6);
+    if label == 5
+      N5 = N5 + 1;
+      u5 = u5 + data(i,:);
+    else
+      N6 = N6 + 1;
+      u6 = u6 + data(i,:);
+    end
+    N = N + 1;
+  end
+  u5 = u5 / N5;
+  u6 = u6 / N6;
+  pi5 = N5 / N;
+  pi6 = N6 / N;
+  assert(abs(pi5+pi6-1) < 0.000001);
+  
+  S5 = zeros(n, n);
+  S6 = zeros(n, n);
+  for i = 1:dataCount
+    label = labels(i, 1);
+    assert(label == 5 || label == 6);
+    if label == 5
+      dist = data(i,:)-u5;
+      S5 = S5 + (transpose(dist)*dist);
+    else
+      dist = data(i,:)-u6;
+      S6 = S6 + (transpose(dist)*dist);
+    end
+  end
+  SIG = (S5 + S6) / N;
+
+  % Estimation parameters.
+  w = (u5 - u6) * inv(SIG);
+  [d1,d2] = size(w);
+  assert(d1 == 1 && d2 == n);
+  w0 = -0.5*u5*inv(SIG)*transpose(u5) + 0.5*u6*inv(SIG)*transpose(u6) + log(pi5/pi6);
 
 % Sigmoid function.
 function s = sig(n)
