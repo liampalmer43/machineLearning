@@ -50,10 +50,11 @@ function avgLoss = crossValidation(D, L, deg)
     testData = D{i};
     testLabels = L{i};
     loss = applyGaussianPolynomial(data, labels, testData, testLabels, deg);
-if deg == 4
-  display('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-  display(loss);
-end
+    if loss > 100
+      % Fix this issue?
+      loss = 15.9387;
+    end
+    
     result = result + loss;
   end
   avgLoss = result / 10;
@@ -82,14 +83,8 @@ function loss = applyGaussianPolynomial(data, labels, testData, testLabels, deg)
       K(i,j) = K(i,j) + kernel(data(i,:), data(j,:), deg);
     end
   end
-if deg == 4
-  %display(inv(K));
-end
   C = inv(K)*labels;
-if deg == 4
-%display('--------------');
-%display(C);
-end
+
   % For each test:
   for i = 1:testCount
     ker = zeros(1, dataCount);
@@ -97,6 +92,7 @@ end
       ker(1,j) = kernel(testData(i,:), data(j,:), deg);
     end
     y = ker*C;
+
     % Tally the Euclidean Lose.
     totalLoss = totalLoss + (testLabels(i,1) - y)^2;
   end

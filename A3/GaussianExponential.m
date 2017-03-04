@@ -28,7 +28,7 @@ display(y);
 % Plot results.
 figure(1);
 plot(x, y, 'b');
-title('Euclidean Loss vs sigma');
+title('Euclidean Loss vs sigma - Gaussian Kernel');
 xlabel('sigma');
 ylabel('Euclidean Loss');
 hold on;
