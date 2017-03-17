@@ -67,8 +67,8 @@ for i = 1:seqCount
       for r = 1:Z
         rec = rec + Theta(class,r)*pLast(r);
       end
-      p(class) = GaussianProbability(testData(data,:), Mean{class}, Var{class}) * rec;
-      sumProb = p(class);
+      p(class,1) = GaussianProbability(testData(data,:), Mean{class}, Var{class}) * rec;
+      sumProb = sumProb + p(class,1);
     end
     p = p / sumProb;
     PS{data} = p;
