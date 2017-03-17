@@ -50,14 +50,17 @@ for i = 1:seqCount
   PS = cell(a, 1);
   % Base Case:
   p1 = zeros(Z,1);
+  sumProb = 0;
   for class = 1:Z
     p1(class,1) = GaussianProbability(testData(1,:), Mean{class}, Var{class}) * Pi(class);
+    sumProb = sumProb + p1(class,1);
   end
-  p1 = p1 / norm(p1);
+  p1 = p1 / sumProb;
   PS{1} = p1; 
 
   for data = 2:a
     p = zeros(Z,1);
+    sumProb = 0;
     for class = 1:Z
       pLast = PS{data-1};
       rec = 0;
@@ -65,8 +68,9 @@ for i = 1:seqCount
         rec = rec + Theta(class,r)*pLast(r);
       end
       p(class) = GaussianProbability(testData(data,:), Mean{class}, Var{class}) * rec;
+      sumProb = p(class);
     end
-    p = p / norm(p);
+    p = p / sumProb;
     PS{data} = p;
   end
 
