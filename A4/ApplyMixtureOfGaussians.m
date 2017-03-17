@@ -58,10 +58,12 @@ for i = 1:5
   for data = 1:a
     x = testData(data,:);
     p = zeros(Z,1);
+    sumProb = 0;
     for class = 1:Z
       p(class,1) = Pi(class)*exp(-0.5*(x-M{class})*inv(SIG)*transpose(x-M{class}));
+      sumProb = sumProb + p(class,1);
     end
-    p = p / norm(p);
+    p = p / sumProb;
     PS{data} = p;
   end
 
