@@ -1,4 +1,4 @@
-function [] = TrainMixtureOfGaussians()
+function [] = ApplyMixtureOfGaussians()
 
 % Number of classes:
 Z = 3;
@@ -25,12 +25,59 @@ for i = 1:5
   labels = [labels; L{i}];
 end
 [Pi, M, SIG] = getParameters(data, labels);
-display(Pi);
-for i = 1:Z
-  display(strcat('Mean for class', int2str(i)));
-  display(M{i});
+
+% Test on the test data set.
+% 5 Test Data Blocks
+TD = cell(5, 1);
+% 5 Test Label Blocks
+TL = cell(5, 1);
+% Initialize blocks.
+for i = 1:5
+  dataFileName = strcat('data/testDataSeq', strcat(int2str(i), '.csv'));
+  labelsFileName = strcat('data/testLabelSeq', strcat(int2str(i), '.csv'));
+  TD{i} = csvread(dataFileName);
+  TL{i} = csvread(labelsFileName);
+  [a,b] = size(TD{i});
+  [c,d] = size(TL{i});
+  assert(a == 100 && c == a && b == 2 && d == 1);
 end
-display(SIG);
+
+right = 0;
+wrong = 0;
+for i = 1:5
+  testData = TD{i};
+  testLabels = TL{i};
+  [a,b] = size(testData);
+  [c,d] = size(testLabels);
+  assert(a == 100 && c == a && b == 2 && d == 1);
+
+  % The ith entry of PS is an array [ai, bi, ci...] with
+  % ai = Pr(yi=a|x1...xi), bi = Pr(yi=b|x1...xi), etc.
+  PS = cell(a, 1);
+  
+  for data = 1:a
+    x = testData(data,:);
+    p = zeros(Z,1);
+    for class = 1:Z
+      p(class,1) = Pi(class)*exp(-0.5*(x-M{class})*inv(SIG)*transpose(x-M{class}));
+    end
+    p = p / norm(p);
+    PS{data} = p;
+  end
+
+  for data = 1:a
+    [m,index] = max(PS{data});
+    if index == testLabels(data,1)
+      right = right + 1;
+    else
+      wrong = wrong + 1;
+    end  
+  end
+end
+
+display(right);
+display(wrong);
+display(right / (right+wrong));
 
 function [Pi, M, SIG] = getParameters(data, labels)
   [m,n] = size(data);
