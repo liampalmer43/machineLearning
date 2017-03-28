@@ -29,7 +29,7 @@ import tensorflow as tf
 
 from tensorflow.examples.tutorials.mnist import input_data
 from tensorflow.examples.tutorials.mnist import mnist
-import mnist
+import mnist_I
 
 # Basic model parameters as external flags.
 FLAGS = None
@@ -120,9 +120,7 @@ def run_training():
         FLAGS.batch_size)
 
     # Build a Graph that computes predictions from the inference model.
-    logits = mnist.inference(images_placeholder,
-                             FLAGS.hidden1,
-                             FLAGS.hidden2)
+    logits = mnist_I.inference(images_placeholder, 150)
 
     # Add to the Graph the Ops for loss calculation.
     loss = mnist.loss(logits, labels_placeholder)
@@ -227,7 +225,7 @@ if __name__ == '__main__':
   parser.add_argument(
       '--max_steps',
       type=int,
-      default=15000,
+      default=10000,
       help='Number of steps to run trainer.'
   )
   parser.add_argument(
